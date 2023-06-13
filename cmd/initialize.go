@@ -53,7 +53,12 @@ func initialize(cmd *cobra.Command, args []string) error {
 		cmdr.Error.Printf(apx.Trans("init.create"), err)
 		return err
 	}
-
+	containerImg, err := container.GetContainerImage()
+	if err != nil {
+		return nil
+	}
+	containerType, err := container.GetContainerType()
+	cmdr.Success.Println("Create container image:", containerImg, "type:", containerType)
 	return nil
 }
 func initNix(cmd *cobra.Command, args []string) error {

@@ -93,9 +93,7 @@ func install(cmd *cobra.Command, args []string) error {
 	assume_yes := cmd.Flag("assume-yes").Changed
 	fix_broken := cmd.Flag("fix-broken").Changed
 	sideload := cmd.Flag("sideload").Changed
-
 	command := append([]string{}, container.GetPkgCommand("install")...)
-
 	if assume_yes {
 		command = append(command, "-y")
 	}

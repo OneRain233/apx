@@ -42,6 +42,7 @@ const CONTAINER_TYPES = 7
 type Container struct {
 	containerType ContainerType
 	customName    string
+	customImage   string
 }
 
 func NewContainer(kind ContainerType) *Container {
@@ -55,12 +56,31 @@ func NewNamedContainer(kind ContainerType, name string) *Container {
 		customName:    name,
 	}
 }
+func NewContainerWithImage(kind ContainerType, image string) *Container {
+	return &Container{
+		containerType: kind,
+		customImage:   image,
+	}
+}
+func NewNamedContainerWithImage(kind ContainerType, name, image string) *Container {
+	return &Container{
+		containerType: kind,
+		customName:    name,
+		customImage:   image,
+	}
+}
+func (c *Container) GetContainerType() (kind ContainerType, err error) {
+	return c.containerType, nil
+}
 func (c *Container) GetContainerImage() (image string, err error) {
+	if c.customImage != "" {
+		return c.customImage, nil
+	}
 	switch c.containerType {
-	case APT:
-		return GetHostImage()
 	case AUR:
-		return "docker.io/library/archlinux", nil
+		return GetHostImage()
+	case APT:
+		return "docker.io/library/ubuntu", nil
 	case DNF:
 		return "docker.io/library/fedora", nil
 	case APK:
@@ -81,10 +101,10 @@ func (c *Container) GetContainerImage() (image string, err error) {
 func (c *Container) GetContainerName() (name string) {
 	var cn strings.Builder
 	switch c.containerType {
-	case APT:
-		cn.WriteString("apx_managed")
 	case AUR:
-		cn.WriteString("apx_managed_aur")
+		cn.WriteString("apx_managed")
+	case APT:
+		cn.WriteString("apx_managed_apt")
 	case DNF:
 		cn.WriteString("apx_managed_dnf")
 	case APK:

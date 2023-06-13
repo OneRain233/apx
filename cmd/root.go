@@ -20,6 +20,7 @@ var apt, aur, dnf, apk, zypper, xbps, nix, swupd bool
 // set in root command's PersistentPreRun function
 var container *core.Container
 var name string
+var image string
 
 const (
 	verboseFlag string = "verbose"
@@ -98,6 +99,7 @@ func AddContainerFlags(cmd *cmdr.Command) *cmdr.Command {
 	cmd.PersistentFlags().BoolVar(&nix, "nix", false, apx.Trans("flags.nix"))
 	cmd.PersistentFlags().BoolVar(&swupd, "swupd", false, apx.Trans("flags.swupd"))
 	cmd.PersistentFlags().StringVarP(&name, "name", "n", "", apx.Trans("flags.name"))
+	cmd.PersistentFlags().StringVarP(&image, "image", "i", "", apx.Trans("flags.image"))
 	viper.BindPFlag("aur", cmd.PersistentFlags().Lookup("aur"))
 	viper.BindPFlag("apt", cmd.PersistentFlags().Lookup("apt"))
 	viper.BindPFlag("dnf", cmd.PersistentFlags().Lookup("dnf"))
@@ -110,7 +112,7 @@ func AddContainerFlags(cmd *cmdr.Command) *cmdr.Command {
 }
 
 func getContainer() *core.Container {
-	var kind core.ContainerType = core.APT
+	var kind core.ContainerType = core.AUR
 	// in the future these should be moved to
 	// constants, and wrapped in package level calls
 	apt = viper.GetBool("apt")
@@ -120,7 +122,9 @@ func getContainer() *core.Container {
 	zypper = viper.GetBool("zypper")
 	xbps = viper.GetBool("xbps")
 	swupd = viper.GetBool("swupd")
-	if aur {
+	if apt {
+		kind = core.APT
+	} else if aur {
 		kind = core.AUR
 	} else if dnf {
 		kind = core.DNF
@@ -133,12 +137,19 @@ func getContainer() *core.Container {
 	} else if swupd {
 		kind = core.SWUPD
 	}
+	cmdr.Info.Println("Using container type:", kind)
+	if len(image) > 0 {
+		if len(name) > 0 {
+			return core.NewNamedContainerWithImage(kind, name, image)
+		} else {
+			return core.NewContainerWithImage(kind, image)
+		}
+	}
 	if len(name) > 0 {
 		return core.NewNamedContainer(kind, name)
 	} else {
 		return core.NewContainer(kind)
 	}
-
 }
 
 func setStorage() error {
